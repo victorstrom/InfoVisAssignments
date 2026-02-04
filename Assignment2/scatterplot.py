@@ -21,7 +21,7 @@ from typing import List, Dict, Optional, Tuple
 
 
 # ----------------------------
-# Configure your CSV paths here
+# Configuring CSV paths
 # ----------------------------
 DATASET_1_PATH = "dataset1.csv"
 DATASET_2_PATH = "dataset2.csv"
