@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TNM111 Part 3 — Custom scatterplot (Tkinter only)
+TNM111 Part 3 — Custom scatterplot
 
 Controls:
 - Left click a point: toggle "origin mode" (color by quadrant relative to that point)
