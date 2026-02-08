@@ -8,6 +8,13 @@ Controls:
 - Keys:
     1 and 2 : switch between dataset
     r     : reset interactions
+
+
+```bash
+cd Assignment2
+python3 scatterplot.py
+```
+
 """
 
 import csv
