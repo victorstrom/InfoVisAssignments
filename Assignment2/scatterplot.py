@@ -131,12 +131,10 @@ class ScatterApp:
 
         # Bind events
         self.canvas.bind("<Button-1>", self.on_left_click)
-
         # Right-click variants (Mac + mouse)
         self.canvas.bind("<Button-3>", self.on_right_click)          # classic right click
         self.canvas.bind("<Button-2>", self.on_right_click)          # common on Mac trackpads
         self.canvas.bind("<Control-Button-1>", self.on_right_click)  # ctrl-click
-
         self.root.bind("r", lambda e: self.reset_modes())
         self.root.bind("1", lambda e: self.load_dataset(DATASET_1_PATH))
         self.root.bind("2", lambda e: self.load_dataset(DATASET_2_PATH))
@@ -217,7 +215,7 @@ class ScatterApp:
         ly += 10
         self.canvas.create_text(
             lx, ly, anchor="w",
-            text="Left click: origin/quadrants\nRight click: 5 nearest\nKeys: 1/2 load, r reset",
+            text="Left click: origin/quadrants\nRight click: Highlight 5 nearest points\nKeys: 1 and 2 will change datasets",
             font=("Arial", 10), fill="#333"
         )
 
