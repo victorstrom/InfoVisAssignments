@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TNM111 Part 3 — Custom scatterplot
+TNM111 Part 3 — Custom scatterplot (Tkinter)
 
 Controls:
 - Left click a point: toggle "origin mode" (color by quadrant relative to that point)
@@ -10,22 +10,17 @@ Controls:
     r     : reset interactions
 """
 
-#hola
-
 import csv
 import math
 import os
 import tkinter as tk
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Tuple
-
 
 # ----------------------------
 # Configuring CSV paths
 # ----------------------------
 DATASET_1_PATH = "dataset1.csv"
 DATASET_2_PATH = "dataset2.csv"
-
 
 # ----------------------------
 # Data model
@@ -35,28 +30,26 @@ class Point:
     x: float
     y: float
     cat: str
-    # screen coords cached after mapping:
+    # cached screen coords after mapping:
     sx: float = 0.0
     sy: float = 0.0
-
 
 # ----------------------------
 # Helpers
 # ----------------------------
-def try_float(s: str) -> Optional[float]:
+def try_float(s):
     try:
         return float(s)
     except Exception:
         return None
 
-
-def read_points_from_csv(path: str) -> List[Point]:
+def read_points_from_csv(path):
     """
     Reads CSV with at least 2 numeric columns (x,y) and an optional category column.
     Accepts header or no header.
     If category missing, uses "default".
     """
-    pts: List[Point] = []
+    pts = []
     if not os.path.exists(path):
         raise FileNotFoundError(f"Could not find file: {path}")
 
@@ -84,22 +77,21 @@ def read_points_from_csv(path: str) -> List[Point]:
             continue
         cat = row[2].strip() if len(row) >= 3 and row[2].strip() else "default"
         pts.append(Point(x=x, y=y, cat=cat))
+
     return pts
 
-
-def nice_ticks(vmin: float, vmax: float, n: int = 5) -> List[float]:
-    """Simple linear ticks (kept intentionally basic)."""
+def nice_ticks(vmin, vmax, n=5):
+    """Simple linear ticks (intentionally basic)."""
     if n <= 1:
         return [vmin]
     step = (vmax - vmin) / (n - 1) if vmax != vmin else 1.0
     return [vmin + i * step for i in range(n)]
 
-
 # ----------------------------
 # Scatter plot app
 # ----------------------------
 class ScatterApp:
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root):
         self.root = root
         self.root.title("Custom Scatter Plot (Tkinter)")
 
@@ -118,10 +110,10 @@ class ScatterApp:
         self.plot_h = self.canvas_h - self.m_top - self.m_bottom
 
         # Data
-        self.points: List[Point] = []
-        self.categories: List[str] = []
-        self.cat_to_shape: Dict[str, str] = {}
-        self.shape_cycle = ["circle", "square", "triangle", "diamond", "plus", "x"]
+        self.points = []
+        self.categories = []
+        self.cat_to_shape = {}
+        self.shape_cycle = ["circle", "square", "triangle"]
 
         # Axis ranges
         self.xmin = 0.0
@@ -130,19 +122,19 @@ class ScatterApp:
         self.ymax = 1.0
 
         # Interaction state
-        self.origin_idx: Optional[int] = None
-        self.origin_active: bool = False
+        self.origin_idx = None
+        self.origin_active = False
 
-        self.neigh_idx: Optional[int] = None
-        self.neigh_active: bool = False
-        self.neigh_set: set[int] = set()
+        self.neigh_idx = None
+        self.neigh_active = False
+        self.neigh_set = set()
 
         # Bind events
         self.canvas.bind("<Button-1>", self.on_left_click)
+        # Right-click variants (Mac + mouse)
         self.canvas.bind("<Button-3>", self.on_right_click)          # classic right click
         self.canvas.bind("<Button-2>", self.on_right_click)          # common on Mac trackpads
         self.canvas.bind("<Control-Button-1>", self.on_right_click)  # ctrl-click
-
         self.root.bind("r", lambda e: self.reset_modes())
         self.root.bind("1", lambda e: self.load_dataset(DATASET_1_PATH))
         self.root.bind("2", lambda e: self.load_dataset(DATASET_2_PATH))
@@ -158,6 +150,7 @@ class ScatterApp:
         if not self.points:
             self.xmin, self.xmax, self.ymin, self.ymax = 0, 1, 0, 1
             return
+
         xs = [p.x for p in self.points]
         ys = [p.y for p in self.points]
         xmin, xmax = min(xs), max(xs)
@@ -169,20 +162,13 @@ class ScatterApp:
         self.xmin, self.xmax = xmin - pad_x, xmax + pad_x
         self.ymin, self.ymax = ymin - pad_y, ymax + pad_y
 
-    def data_to_screen(self, x: float, y: float) -> Tuple[float, float]:
+    def data_to_screen(self, x, y):
         # normalize to 0..1
         nx = 0.5 if self.xmax == self.xmin else (x - self.xmin) / (self.xmax - self.xmin)
         ny = 0.5 if self.ymax == self.ymin else (y - self.ymin) / (self.ymax - self.ymin)
         sx = self.m_left + nx * self.plot_w
         sy = self.m_top + (1.0 - ny) * self.plot_h  # invert y for screen coords
         return sx, sy
-
-    def screen_to_data(self, sx: float, sy: float) -> Tuple[float, float]:
-        nx = (sx - self.m_left) / self.plot_w
-        ny = 1.0 - ((sy - self.m_top) / self.plot_h)
-        x = self.xmin + nx * (self.xmax - self.xmin)
-        y = self.ymin + ny * (self.ymax - self.ymin)
-        return x, y
 
     def draw_axes(self):
         # axes lines (left & bottom)
@@ -200,7 +186,7 @@ class ScatterApp:
 
         # x ticks
         for t in xticks:
-            sx, sy = self.data_to_screen(t, self.ymin)
+            sx, _ = self.data_to_screen(t, self.ymin)
             self.canvas.create_line(sx, y0, sx, y0 + 6, fill="black")
             self.canvas.create_text(sx, y0 + 20, text=f"{t:.2f}", fill="black", font=("Arial", 10))
 
@@ -226,15 +212,14 @@ class ScatterApp:
             self.canvas.create_text(lx + 30, ly + 10, text=str(cat), anchor="w", font=("Arial", 11))
             ly += 28
 
-        # modes hint
         ly += 10
         self.canvas.create_text(
             lx, ly, anchor="w",
-            text="Left click: origin/quadrants\nRight click: 5 nearest\nKeys: 1/2 load, r reset",
+            text="Left click: origin/quadrants\nRight click: Highlight 5 nearest points\nKeys: 1 and 2 will change datasets",
             font=("Arial", 10), fill="#333"
         )
 
-    def quadrant_color(self, p: Point, origin: Point) -> str:
+    def quadrant_color(self, p, origin):
         # Q1: x>=ox,y>=oy ; Q2: x<ox,y>=oy ; Q3: x<ox,y<oy ; Q4: x>=ox,y<oy
         if p.x >= origin.x and p.y >= origin.y:
             return "#1f77b4"  # blue
@@ -250,11 +235,9 @@ class ScatterApp:
 
         origin_pt = self.points[self.origin_idx] if (self.origin_active and self.origin_idx is not None) else None
 
-        # draw all points
         for i, p in enumerate(self.points):
             p.sx, p.sy = self.data_to_screen(p.x, p.y)
 
-            # base styling
             fill = "#666"
             outline = "black"
             width = 1
@@ -269,14 +252,13 @@ class ScatterApp:
                     outline = "black"
                     width = 3
                 elif i in self.neigh_set:
-                    outline = "#9c27b0"  # purple
+                    outline = "#9c27b0"
                     width = 3
                 else:
-                    # dim non-highlighted points slightly
                     outline = "#999"
                     width = 1
 
-            # selected origin highlight (ring)
+            # selected origin highlight
             if origin_pt is not None and i == self.origin_idx:
                 outline = "black"
                 width = 3
@@ -284,13 +266,13 @@ class ScatterApp:
             shape = self.cat_to_shape.get(p.cat, "circle")
             self.draw_shape(p.sx, p.sy, shape, fill=fill, outline=outline, size=7, width=width)
 
-        # optional: crosshair for origin
+        # crosshair for origin
         if origin_pt is not None:
             ox, oy = origin_pt.sx, origin_pt.sy
             self.canvas.create_line(ox, self.m_top, ox, self.m_top + self.plot_h, fill="#000", dash=(4, 4))
             self.canvas.create_line(self.m_left, oy, self.m_left + self.plot_w, oy, fill="#000", dash=(4, 4))
 
-    def draw_shape(self, cx: float, cy: float, shape: str, fill: str, outline: str, size: int = 7, width: int = 1):
+    def draw_shape(self, cx, cy, shape, fill, outline, size=7, width=1):
         s = size
         if shape == "circle":
             self.canvas.create_oval(cx - s, cy - s, cx + s, cy + s, fill=fill, outline=outline, width=width)
@@ -299,15 +281,7 @@ class ScatterApp:
         elif shape == "triangle":
             pts = [cx, cy - s, cx - s, cy + s, cx + s, cy + s]
             self.canvas.create_polygon(pts, fill=fill, outline=outline, width=width)
-        elif shape == "diamond":
-            pts = [cx, cy - s, cx - s, cy, cx, cy + s, cx + s, cy]
-            self.canvas.create_polygon(pts, fill=fill, outline=outline, width=width)
-        elif shape == "plus":
-            self.canvas.create_line(cx - s, cy, cx + s, cy, fill=outline, width=max(2, width))
-            self.canvas.create_line(cx, cy - s, cx, cy + s, fill=outline, width=max(2, width))
-        elif shape == "x":
-            self.canvas.create_line(cx - s, cy - s, cx + s, cy + s, fill=outline, width=max(2, width))
-            self.canvas.create_line(cx - s, cy + s, cx + s, cy - s, fill=outline, width=max(2, width))
+
         else:
             self.canvas.create_oval(cx - s, cy - s, cx + s, cy + s, fill=fill, outline=outline, width=width)
 
@@ -320,7 +294,7 @@ class ScatterApp:
         self.draw_points()
         self.draw_legend()
 
-    def draw_message(self, msg: str):
+    def draw_message(self, msg):
         self.canvas.delete("all")
         self.canvas.create_text(
             self.canvas_w / 2, self.canvas_h / 2,
@@ -328,7 +302,7 @@ class ScatterApp:
         )
 
     # ----- Interaction -----
-    def find_nearest_point(self, sx: float, sy: float, max_px: float = 12.0) -> Optional[int]:
+    def find_nearest_point(self, sx, sy, max_px=12.0):
         if not self.points:
             return None
         best_i = None
@@ -349,7 +323,6 @@ class ScatterApp:
         if idx is None:
             return
 
-        # Toggle origin mode if clicking same origin again
         if self.origin_active and self.origin_idx == idx:
             self.origin_active = False
             self.origin_idx = None
@@ -364,7 +337,6 @@ class ScatterApp:
         if idx is None:
             return
 
-        # Toggle neighbors mode if clicking same point again
         if self.neigh_active and self.neigh_idx == idx:
             self.neigh_active = False
             self.neigh_idx = None
@@ -376,7 +348,7 @@ class ScatterApp:
 
         self.redraw()
 
-    def compute_k_nearest(self, idx: int, k: int = 5) -> List[int]:
+    def compute_k_nearest(self, idx, k=5):
         base = self.points[idx]
         dists = []
         for j, p in enumerate(self.points):
@@ -403,7 +375,7 @@ class ScatterApp:
         for i, c in enumerate(cats):
             self.cat_to_shape[c] = self.shape_cycle[i % len(self.shape_cycle)]
 
-    def load_dataset(self, path: str):
+    def load_dataset(self, path):
         try:
             pts = read_points_from_csv(path)
         except Exception as e:
@@ -422,12 +394,10 @@ class ScatterApp:
         self.reset_modes()
         self.redraw()
 
-
 def main():
     root = tk.Tk()
     app = ScatterApp(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
