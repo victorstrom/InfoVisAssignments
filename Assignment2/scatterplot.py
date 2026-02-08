@@ -6,7 +6,7 @@ Controls:
 - Left click a point: toggle "origin mode" (color by quadrant relative to that point)
 - Right click a point: toggle "neighbors mode" (highlight 5 nearest neighbors)
 - Keys:
-    1 / 2 : load dataset 1 / 2 (edit file paths below)
+    1 and 2 : switch between dataset
     r     : reset interactions
 """
 
@@ -19,8 +19,9 @@ from dataclasses import dataclass
 # ----------------------------
 # Configuring CSV paths
 # ----------------------------
-DATASET_1_PATH = "dataset1.csv"
-DATASET_2_PATH = "dataset2.csv"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_1_PATH = os.path.join(SCRIPT_DIR, "dataset1.csv")
+DATASET_2_PATH = os.path.join(SCRIPT_DIR, "dataset2.csv")
 
 # ----------------------------
 # Data model
