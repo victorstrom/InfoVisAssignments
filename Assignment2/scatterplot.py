@@ -113,7 +113,7 @@ class ScatterApp:
         self.points = []
         self.categories = []
         self.cat_to_shape = {}
-        self.shape_cycle = ["circle", "square", "triangle", "diamond", "plus", "x"]
+        self.shape_cycle = ["circle", "square", "triangle"]
 
         # Axis ranges
         self.xmin = 0.0
@@ -283,15 +283,7 @@ class ScatterApp:
         elif shape == "triangle":
             pts = [cx, cy - s, cx - s, cy + s, cx + s, cy + s]
             self.canvas.create_polygon(pts, fill=fill, outline=outline, width=width)
-        elif shape == "diamond":
-            pts = [cx, cy - s, cx - s, cy, cx, cy + s, cx + s, cy]
-            self.canvas.create_polygon(pts, fill=fill, outline=outline, width=width)
-        elif shape == "plus":
-            self.canvas.create_line(cx - s, cy, cx + s, cy, fill=outline, width=max(2, width))
-            self.canvas.create_line(cx, cy - s, cx, cy + s, fill=outline, width=max(2, width))
-        elif shape == "x":
-            self.canvas.create_line(cx - s, cy - s, cx + s, cy + s, fill=outline, width=max(2, width))
-            self.canvas.create_line(cx - s, cy + s, cx + s, cy - s, fill=outline, width=max(2, width))
+
         else:
             self.canvas.create_oval(cx - s, cy - s, cx + s, cy + s, fill=fill, outline=outline, width=width)
 
