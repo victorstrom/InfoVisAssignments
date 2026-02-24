@@ -58,13 +58,16 @@ def read_points_from_csv(path):
 
     return pts
 
-def nice_ticks(vmin, vmax, n=5):
-    """Generate evenly spaced tick values for axis labels."""
+def nice_ticks(vmin, vmax, n):
+    """Generate nicely spaced tick values for axis labels."""
     if n <= 1:
         return [vmin]
-    # Create n evenly distributed ticks across the range
-    step = (vmax - vmin) / (n - 1) if vmax != vmin else 1.0
-    return [vmin + i * step for i in range(n)]
+    # Use floor for min and ceil for max to get round boundaries
+    nice_min = math.floor(vmin) + 1
+    nice_max = math.ceil(vmax) - 1
+    # Create n evenly distributed ticks between nice boundaries
+    step = (nice_max - nice_min) / (n - 1)
+    return [nice_min + i * step for i in range(n)]
 
 
 
@@ -160,8 +163,8 @@ class ScatterApp:
         self.canvas.create_line(x0, y0, x0, y1, fill="black", width=2)  # y axis
 
         # Generate tick positions and draw them with labels
-        xticks = nice_ticks(self.xmin, self.xmax, n=6)
-        yticks = nice_ticks(self.ymin, self.ymax, n=6)
+        xticks = nice_ticks(self.xmin, self.xmax, n=5)
+        yticks = nice_ticks(self.ymin, self.ymax, n=5)
 
         # ticks on x-axis
         for t in xticks:
@@ -269,13 +272,8 @@ class ScatterApp:
         self.draw_points()
         self.draw_legend()
 
-    # Used to display messages
-    def draw_message(self, msg):
-        self.canvas.delete("all")
-        self.canvas.create_text(
-            self.canvas_w / 2, self.canvas_h / 2,
-            text=msg, font=("Arial", 14), fill="#333", justify="center"
-        )
+
+
 
     # ----- Interaction -----
     def find_nearest_point(self, sx, sy, max_px=12.0):
