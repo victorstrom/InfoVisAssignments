@@ -6,6 +6,7 @@ import json
 import os
 
 #  DATA LOADING 
+# -> läser in rätt jsonfil baserat på användarens val av episod
 def load_episode_data(episode_num):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     if episode_num == "Full":
@@ -19,11 +20,15 @@ def load_episode_data(episode_num):
         return json.load(f)
 
 #  GRAPH GENERATION 
+# syfte: hämta all data och skapa plotly-figurer baserat på det
+#        visar ett nätverk med karaktärer som noder och deras interaktioner som kanter
+#        
 def create_network_graph(data, min_weight=1, highlight_node=None):
     nodes = data['nodes']
     # Filtering links based on edge weight 
     links = [l for l in data['links'] if l['value'] >= min_weight]
     
+    # skapar networkxgraf, tar in värden från jsonfil, lägger till noder och kanter
     G = nx.Graph()
     for i, node in enumerate(nodes):
         # Storing original suggested colors and values
@@ -36,20 +41,21 @@ def create_network_graph(data, min_weight=1, highlight_node=None):
     pos = nx.spring_layout(G, k=0.5, seed=42)
 
     # VISIBLE EDGES
-    edge_x, edge_y = [], []
+    edge_x, edge_y = [], [] # skapar start och slutkoord för varje kant
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
         edge_x.extend([x0, x1, None])
         edge_y.extend([y0, y1, None])
 
-    edge_trace = go.Scatter(
+    edge_trace = go.Scatter( # synlig kantlinje
         x=edge_x, y=edge_y,
         line=dict(width=1.5, color='#888'),
         hoverinfo='none', 
         mode='lines')
 
-    # EDGE HOVER POINTS (Details-on-demand for edges) 
+    # EDGE HOVER POINTS (Details-on-demand for edges)
+    # skapar osynliga punkter i mitten av varje edge som man kan hovra över
     mid_x, mid_y, mid_text = [], [], []
     for edge in G.edges(data=True):
         x0, y0 = pos[edge[0]]
@@ -62,6 +68,7 @@ def create_network_graph(data, min_weight=1, highlight_node=None):
         char2 = G.nodes[edge[1]]['name']
         mid_text.append(f"Connection: {char1} & {char2}<br>Shared Scenes: {edge[2]['weight']}")
 
+    # "ritar" ut de osynliga punkterna
     edge_hover_trace = go.Scatter(
         x=mid_x, y=mid_y,
         mode='markers',
@@ -75,9 +82,10 @@ def create_network_graph(data, min_weight=1, highlight_node=None):
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
-        # Showing character name and scene count 
+        # vid hover, visar namn och antal scener
         node_text.append(f"Character: {G.nodes[node]['name']}<br>Scenes: {G.nodes[node]['val']}")
         
+        # if selected: highlighted and enlarged
         # Brushing and Linking: Highlight character in red if selected 
         if highlight_node and G.nodes[node]['name'] == highlight_node:
             node_color.append('#FF0000') 
@@ -87,6 +95,7 @@ def create_network_graph(data, min_weight=1, highlight_node=None):
             node_color.append(G.nodes[node]['color'])
             node_size.append(15)
 
+    # ritar ut noderna
     node_trace = go.Scatter(
         x=node_x, y=node_y,
         mode='markers',
@@ -141,6 +150,7 @@ app.layout = html.Div([
     ], style={'display': 'flex'})
 ])
 
+# kopplar UI och uppdaterar figurer
 @app.callback(
     [Output('network-1', 'figure'), Output('network-2', 'figure'), Output('selected-character-store', 'data')],
     [Input('ep-select-1', 'value'), Input('ep-select-2', 'value'), 
@@ -167,4 +177,4 @@ def update_graphs(ep1, ep2, weight, click1, click2, current_store):
            clicked_char
 
 if __name__ == '__main__':     
-    app.run(debug=True)
+    app.run(debug=False)
